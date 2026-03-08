@@ -102,3 +102,44 @@ export async function logout(req, res) {
     });
   }
 }
+
+export async function updateProfile(req, res) {
+  const { profilepic } = req.body;
+  if (!profilepic) {
+    return res.status(400).json({
+      message: "Profile picture is required",
+    });
+  }
+
+  try {
+    const userId = req.user._id;
+    const uploadResponse = await cloudinary.uploader.upload(profilepic);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilepic: uploadResponse.secure_url },
+      { new: true },
+    );
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      profilepic: updatedUser.profilepic,
+    });
+  } catch (error) {
+    console.error("Error during profile update:", error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export const checkAuth = (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.error("Error during auth check:", error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
